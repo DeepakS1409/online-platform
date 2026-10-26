@@ -17,6 +17,7 @@ import {
 import { Product, Category } from '../../types';
 import { db } from '../../services/db';
 import { formatINR } from '../../utils/formatters';
+import { ProductImageUploader, UploadedImageItem } from './ProductImageUploader';
 
 export const AdminProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -57,6 +58,7 @@ export const AdminProductManagement: React.FC = () => {
   });
 
   const [formError, setFormError] = useState('');
+  const [productImages, setProductImages] = useState<UploadedImageItem[]>([]);
 
   const loadData = async () => {
     setLoading(true);
@@ -100,9 +102,10 @@ export const AdminProductManagement: React.FC = () => {
       stock_physical: 20,
       low_stock_threshold: 5,
       is_active: true,
-      image_url_1: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80',
+      image_url_1: '',
       image_url_2: '',
     });
+    setProductImages([]);
     setFormError('');
     setIsEditModalOpen(true);
   };
@@ -120,9 +123,19 @@ export const AdminProductManagement: React.FC = () => {
       stock_physical: p.stock_physical,
       low_stock_threshold: p.low_stock_threshold,
       is_active: p.is_active,
-      image_url_1: p.images?.[0]?.image_url || '',
-      image_url_2: p.images?.[1]?.image_url || '',
+      image_url_1: '',
+      image_url_2: '',
     });
+    // Preserve existing product images
+    const existingImages: UploadedImageItem[] = (p.images && p.images.length > 0)
+      ? p.images.map((img, idx) => ({
+          id: img.id,
+          image_url: img.image_url,
+          storage_path: img.storage_path,
+          is_thumbnail: img.is_thumbnail ?? idx === 0,
+        }))
+      : [];
+    setProductImages(existingImages);
     setFormError('');
     setIsEditModalOpen(true);
   };
@@ -137,15 +150,26 @@ export const AdminProductManagement: React.FC = () => {
       return;
     }
 
+    if (productImages.length === 0) {
+      setFormError('Please add at least one product photo using "Upload from Gallery" or "Take Photo".');
+      return;
+    }
+
     const purchase = parseFloat(formData.purchase_cost_rupees || '0') || 0;
     const packaging = parseFloat(formData.packaging_cost_rupees || '0') || 0;
 
-    const images = [];
-    if (formData.image_url_1.trim()) {
-      images.push({ image_url: formData.image_url_1.trim(), is_thumbnail: true });
-    }
-    if (formData.image_url_2.trim()) {
-      images.push({ image_url: formData.image_url_2.trim(), is_thumbnail: false });
+    const formattedImages = productImages.map((img, idx) => ({
+      id: img.id || `img-${Date.now()}-${idx}`,
+      product_id: editingProduct?.id,
+      image_url: img.image_url,
+      storage_path: img.storage_path || `products/${editingProduct?.id || 'new'}-${idx}.jpg`,
+      display_order: idx + 1,
+      is_thumbnail: img.is_thumbnail ?? idx === 0,
+    }));
+
+    // Ensure at least one thumbnail is marked
+    if (!formattedImages.some(img => img.is_thumbnail) && formattedImages.length > 0) {
+      formattedImages[0].is_thumbnail = true;
     }
 
     try {
@@ -160,14 +184,7 @@ export const AdminProductManagement: React.FC = () => {
           packaging_cost_paise: Math.round(packaging * 100),
           low_stock_threshold: formData.low_stock_threshold,
           is_active: formData.is_active,
-          images: images.length > 0 ? images.map((img, idx) => ({
-            id: `img-${Date.now()}-${idx}`,
-            product_id: editingProduct.id,
-            image_url: img.image_url,
-            storage_path: `products/${editingProduct.id}-${idx}.jpg`,
-            display_order: idx + 1,
-            is_thumbnail: img.is_thumbnail
-          })) : editingProduct.images
+          images: formattedImages,
         });
       } else {
         await db.createProduct({
@@ -181,7 +198,7 @@ export const AdminProductManagement: React.FC = () => {
           stock_physical: formData.stock_physical,
           low_stock_threshold: formData.low_stock_threshold,
           is_active: formData.is_active,
-          images: images
+          images: formattedImages,
         });
       }
 
@@ -558,23 +575,10 @@ export const AdminProductManagement: React.FC = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="block font-medium text-stone-700">Product Images (URLs or storage paths)</label>
-                <input
-                  type="url"
-                  value={formData.image_url_1}
-                  onChange={(e) => setFormData({ ...formData, image_url_1: e.target.value })}
-                  placeholder="Primary Photo URL (https://...)"
-                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg font-mono text-[11px]"
-                />
-                <input
-                  type="url"
-                  value={formData.image_url_2}
-                  onChange={(e) => setFormData({ ...formData, image_url_2: e.target.value })}
-                  placeholder="Secondary / Detail Photo URL (https://...)"
-                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg font-mono text-[11px]"
-                />
-              </div>
+              <ProductImageUploader
+                images={productImages}
+                onChange={setProductImages}
+              />
 
               <div className="flex items-center gap-2 pt-2">
                 <input
