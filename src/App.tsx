@@ -254,6 +254,7 @@ export function App() {
       <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
+        onOpenAdminLogin={() => navigateTo('admin-login')}
       />
     </div>
   );

@@ -5,9 +5,10 @@ import { useAuth } from '../../context/AuthContext';
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenAdminLogin?: () => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onOpenAdminLogin }) => {
   const { login, register, verifyOtpMock } = useAuth();
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [step, setStep] = useState<'form' | 'otp'>('form');
@@ -232,13 +233,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   setIsRegisterMode(!isRegisterMode);
                   setErrorMsg('');
                 }}
-                className="text-xs text-rose-700 font-semibold hover:underline"
+                className="text-xs text-rose-700 font-semibold hover:underline cursor-pointer"
               >
                 {isRegisterMode
                   ? 'Already have an account? Sign In'
                   : "Don't have an account? Register with Phone"}
               </button>
             </div>
+
+            {onOpenAdminLogin && (
+              <div className="pt-3 border-t border-stone-100 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenAdminLogin();
+                  }}
+                  className="text-[11px] text-stone-500 hover:text-rose-700 transition-colors inline-flex items-center gap-1.5 cursor-pointer font-medium"
+                >
+                  <Lock className="w-3 h-3 text-stone-400" />
+                  <span>Store Administrator? Go to Dedicated Admin Login →</span>
+                </button>
+              </div>
+            )}
           </form>
         )}
 

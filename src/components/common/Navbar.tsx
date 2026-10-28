@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Search, Shield, User, Menu, X, ArrowRight, MessageCircle } from 'lucide-react';
+import { ShoppingBag, Search, Shield, User, Menu, X, ArrowRight, MessageCircle, Lock } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { Category } from '../../types';
@@ -42,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1 text-[11px] text-amber-400 font-semibold bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-800/60">
                 <Shield className="w-3 h-3" />
-                <span>Admin Mode</span>
+                <span>Admin Active</span>
               </span>
               <button 
                 onClick={() => setActiveView(activeView === 'admin' ? 'store' : 'admin')}
@@ -52,9 +52,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </div>
           ) : (
-            <span className="text-[11px] text-stone-400 hidden sm:inline">
-              WhatsApp Support: +91 73061 17078
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] text-stone-400 hidden sm:inline">
+                WhatsApp: +91 73061 17078
+              </span>
+              <button
+                onClick={() => setActiveView('admin-login')}
+                className="text-[11px] text-stone-200 hover:text-white flex items-center gap-1 transition-colors cursor-pointer bg-stone-800/80 hover:bg-stone-700 px-2.5 py-0.5 rounded-md border border-stone-700/60"
+                title="Administrator Login"
+              >
+                <Lock className="w-3 h-3 text-rose-400" />
+                <span>Admin Login</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
