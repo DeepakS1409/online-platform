@@ -12,8 +12,10 @@ import {
   Upload, 
   Settings, 
   ArrowLeft,
+  LogOut,
   X
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export type AdminTab = 
   | 'dashboard'
@@ -43,6 +45,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   isOpen,
   onCloseMobile,
 }) => {
+  const { adminLogout } = useAuth();
+
+  const handleLogout = async () => {
+    await adminLogout();
+    onExitAdmin();
+  };
+
   const menuItems: Array<{ id: AdminTab; label: string; icon: React.ComponentType<{ className?: string }> }> = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
     { id: 'products', label: 'Products', icon: Package },
@@ -106,7 +115,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   onSelectTab(item.id);
                   onCloseMobile();
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                   isActive
                     ? 'bg-rose-900/80 text-white font-semibold shadow-xs border border-rose-700/50'
                     : 'text-stone-400 hover:text-stone-100 hover:bg-stone-900'
@@ -119,14 +128,21 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           })}
         </nav>
 
-        {/* Bottom footer button to exit to storefront */}
-        <div className="p-4 border-t border-stone-800">
+        {/* Bottom footer button to exit to storefront or logout */}
+        <div className="p-4 border-t border-stone-800 space-y-2">
           <button
             onClick={onExitAdmin}
-            className="w-full py-2.5 px-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-stone-800"
+            className="w-full py-2 px-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-stone-800 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5 text-rose-400" />
             <span>Return to Storefront</span>
+          </button>
+          <button
+            onClick={handleLogout}
+            className="w-full py-2 px-3 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 hover:text-rose-100 text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-rose-900/50 cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out Administrator</span>
           </button>
         </div>
       </aside>

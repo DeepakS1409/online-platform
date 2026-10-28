@@ -1,18 +1,22 @@
 import React from 'react';
-import { MessageCircle, Phone, Mail, MapPin, ShieldCheck } from 'lucide-react';
+import { MessageCircle, Phone, Mail, MapPin, ShieldCheck, Lock } from 'lucide-react';
 import { Category } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 interface FooterProps {
   categories: Category[];
   onSelectCategory: (slug: string) => void;
   onOpenAdmin: () => void;
+  onOpenAdminLogin: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   categories,
   onSelectCategory,
   onOpenAdmin,
+  onOpenAdminLogin,
 }) => {
+  const { isAdmin } = useAuth();
   return (
     <footer className="bg-stone-900 text-stone-300 text-xs border-t border-stone-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
@@ -100,12 +104,23 @@ export const Footer: React.FC<FooterProps> = ({
             <p className="text-[11px] text-stone-400 leading-relaxed mb-3">
               Built on React, TypeScript, and Supabase PostgreSQL with atomic stock reservation and QR-based shipping management.
             </p>
-            <button
-              onClick={onOpenAdmin}
-              className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-lg text-xs font-semibold border border-stone-700 transition-colors cursor-pointer"
-            >
-              Open Administrator Console
-            </button>
+            {isAdmin ? (
+              <button
+                onClick={onOpenAdmin}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-900/80 hover:bg-rose-800 text-white rounded-lg text-xs font-semibold border border-rose-700 transition-colors cursor-pointer"
+              >
+                <Lock className="w-3.5 h-3.5 text-rose-300" />
+                <span>Open Administrator Console</span>
+              </button>
+            ) : (
+              <button
+                onClick={onOpenAdminLogin}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg text-xs font-semibold border border-stone-700 transition-colors cursor-pointer"
+              >
+                <Lock className="w-3.5 h-3.5 text-rose-400" />
+                <span>Admin Login</span>
+              </button>
+            )}
           </div>
 
         </div>
@@ -113,7 +128,16 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Bottom copyright */}
         <div className="mt-12 pt-6 border-t border-stone-800 flex flex-col sm:flex-row justify-between items-center text-[11px] text-stone-500 gap-2">
           <p>© {new Date().getFullYear()} V2 Online Dress Store. All rights reserved.</p>
-          <p>Manual WhatsApp settlement active • Free delivery on orders over ₹999</p>
+          <div className="flex items-center gap-4">
+            <span>Manual WhatsApp settlement active • Free delivery on orders over ₹999</span>
+            <button
+              onClick={isAdmin ? onOpenAdmin : onOpenAdminLogin}
+              className="text-stone-500 hover:text-stone-400 transition-colors cursor-pointer inline-flex items-center gap-1"
+            >
+              <Lock className="w-3 h-3 text-stone-500" />
+              <span>{isAdmin ? 'Admin Console' : 'Admin Login'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </footer>

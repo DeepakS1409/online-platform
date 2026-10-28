@@ -10,8 +10,8 @@ interface NavbarProps {
   onSelectCategory: (slug: string) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  activeView: 'store' | 'orders' | 'admin';
-  setActiveView: (view: 'store' | 'orders' | 'admin') => void;
+  activeView: 'store' | 'orders' | 'admin' | 'admin-login';
+  setActiveView: (view: 'store' | 'orders' | 'admin' | 'admin-login') => void;
   onOpenAuth: () => void;
 }
 
@@ -26,7 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuth,
 }) => {
   const { totalItemCount, setIsCartOpen } = useCart();
-  const { user, isAdmin, switchRole, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -38,14 +38,24 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span>Free Delivery across India on orders above ₹999 • Pure Cotton Guarantee</span>
         </div>
         <div className="flex items-center gap-4 text-stone-400">
-          <button 
-            onClick={() => switchRole(isAdmin ? 'customer' : 'admin')}
-            className="hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer text-xs"
-            title="Toggle between Storefront and Admin Mode for testing"
-          >
-            <Shield className={`w-3.5 h-3.5 ${isAdmin ? 'text-amber-400' : 'text-stone-400'}`} />
-            <span>Mode: <strong className={isAdmin ? 'text-amber-400' : 'text-stone-200'}>{isAdmin ? 'Admin' : 'Customer'}</strong></span>
-          </button>
+          {isAdmin ? (
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 text-[11px] text-amber-400 font-semibold bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-800/60">
+                <Shield className="w-3 h-3" />
+                <span>Admin Mode</span>
+              </span>
+              <button 
+                onClick={() => setActiveView(activeView === 'admin' ? 'store' : 'admin')}
+                className="hover:text-white text-[11px] font-medium transition-colors cursor-pointer"
+              >
+                {activeView === 'admin' ? 'View Storefront' : 'Admin Console'}
+              </button>
+            </div>
+          ) : (
+            <span className="text-[11px] text-stone-400 hidden sm:inline">
+              WhatsApp Support: +91 73061 17078
+            </span>
+          )}
         </div>
       </div>
 

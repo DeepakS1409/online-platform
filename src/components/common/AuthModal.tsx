@@ -76,16 +76,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleAdminDemoLogin = async () => {
-    setLoading(true);
-    try {
-      await login('7306117078', 'admin123');
-      onClose();
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-stone-100">
@@ -247,18 +237,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 {isRegisterMode
                   ? 'Already have an account? Sign In'
                   : "Don't have an account? Register with Phone"}
-              </button>
-            </div>
-
-            {/* Quick Administrator Demo Shortcut */}
-            <div className="pt-3 border-t border-stone-100 text-center">
-              <button
-                type="button"
-                onClick={handleAdminDemoLogin}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-[11px] font-semibold cursor-pointer"
-              >
-                <KeyRound className="w-3.5 h-3.5 text-amber-600" />
-                <span>One-Click Store Admin Demo Sign-In</span>
               </button>
             </div>
           </form>

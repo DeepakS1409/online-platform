@@ -70,17 +70,42 @@ The platform supports customer mobile authentication.
 
 ---
 
-## 6. Administrator Account Setup
+## 6. Secure Administrator Account Setup & Authentication Architecture
 
-To designate a store administrator:
-1. Register a user in the application or in Supabase Auth with the store admin's mobile number (e.g. `9876543210`).
-2. In Supabase SQL Editor, run:
+The V2 platform enforces **Multi-Layer Defense in Depth** for administrator features:
+- **Dedicated Admin Login Page:** Completely decoupled from the public customer storefront. Customers cannot view the admin console or admin dashboard.
+- **Server-Side Authorization & RLS:** In production, Supabase Auth validates passwords server-side using bcrypt. PostgreSQL Row Level Security (RLS) policies call `public.is_admin(auth.uid())` to protect all catalogue modifications, orders, payments, shipments, and reports.
+- **No Plaintext Credential Exposure:** Passwords and credentials are never stored in plaintext or exposed in client JavaScript bundles.
+- **Rate Limiting & Lockout Protection:** 5 consecutive failed login attempts trigger an automatic 60-second lockout to protect against brute-force attacks.
+- **Route Guards & Session Expiration:** Unauthenticated direct access to `#/admin` redirects to `#/admin/login`. Admin sessions automatically expire after 2 hours.
+
+### Production Setup via Supabase Auth:
+1. In your **Supabase Dashboard**, navigate to **Authentication -> Users**.
+2. Click **Add User -> Create User** and enter:
+   - Email: `admin1234@v2boutique.in` (or your chosen admin email)
+   - Password: `<strong-production-password>`
+   - Auto Confirm User: Checked
+3. In Supabase Dashboard, open **SQL Editor** and run the following script to assign the administrator role:
    ```sql
-   UPDATE public.profiles
-   SET role = 'admin'
-   WHERE phone = '9876543210';
+   -- Insert or promote the administrator profile
+   INSERT INTO public.profiles (id, phone, full_name, role)
+   VALUES (
+     (SELECT id FROM auth.users WHERE email = 'admin1234@v2boutique.in'),
+     '7306117078',
+     'Savithri (V2 Store Administrator)',
+     'admin'
+   )
+   ON CONFLICT (id) DO UPDATE SET role = 'admin';
    ```
-3. Admins will immediately gain access to the protected **Admin Console**, product catalogue management, inventory adjustments, QR scanner, payment logs, and sales reports.
+4. Update your production `.env` file with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+5. The administrator can now log in at `#/admin/login` using either their username (`admin1234`) or email (`admin1234@v2boutique.in`).
+
+### Local / Sandbox Testing Mode:
+When `VITE_SUPABASE_URL` is omitted, the application runs in local sandbox mode:
+- Initial test credentials: **Username:** `admin1234` | **Password:** `admin1234`
+- Validated via salted SHA-256 hash comparison (`v2_boutique_salt_2026`) using the browser's standard Web Crypto API.
+- Protected by rate limiting (5 attempts max, 60s cooldown).
+- Plaintext credentials are never hardcoded or emitted into the production build bundle.
 
 ---
 
