@@ -22,6 +22,7 @@ import { AdminReportsView } from './components/admin/AdminReportsView';
 import { AdminCsvImportModal } from './components/admin/AdminCsvImportModal';
 import { AdminSettingsView } from './components/admin/AdminSettingsView';
 import { AdminLoginPage } from './components/admin/AdminLoginPage';
+import { adminAuth } from './services/adminAuth';
 
 import { db } from './services/db';
 import { Category, Product, Order } from './types';
@@ -57,15 +58,18 @@ export function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.toLowerCase();
+      const session = adminAuth.getSession();
+      const isNowAdmin = Boolean(session && session.expiresAt > Date.now());
+
       if (hash === '#admin' || hash === '#/admin') {
-        if (isAdmin) {
+        if (isAdmin || isNowAdmin) {
           setActiveView('admin');
         } else {
           setActiveView('admin-login');
           setLoginInitialError('Administrator login required to access V2 Operations.');
         }
       } else if (hash === '#admin-login' || hash === '#/admin/login' || hash === '#/admin-login') {
-        if (isAdmin) {
+        if (isAdmin || isNowAdmin) {
           setActiveView('admin');
         } else {
           setActiveView('admin-login');
@@ -84,22 +88,28 @@ export function App() {
 
   const navigateTo = (view: 'store' | 'orders' | 'admin' | 'admin-login') => {
     if (view === 'admin') {
-      if (!isAdmin) {
+      const session = adminAuth.getSession();
+      const isNowAdmin = Boolean(session && session.expiresAt > Date.now());
+
+      if (!isAdmin && !isNowAdmin) {
         setLoginInitialError('Administrator credentials required to access V2 Operations.');
         setActiveView('admin-login');
         window.location.hash = '#/admin/login';
         return;
       }
+      setActiveView('admin');
       window.location.hash = '#/admin';
     } else if (view === 'admin-login') {
       setLoginInitialError('');
+      setActiveView('admin-login');
       window.location.hash = '#/admin/login';
     } else if (view === 'orders') {
+      setActiveView('orders');
       window.location.hash = '#/orders';
     } else {
+      setActiveView('store');
       window.location.hash = '';
     }
-    setActiveView(view);
   };
 
   const handleOrderNow = (product: Product, quantity = 1) => {
@@ -117,7 +127,8 @@ export function App() {
     return (
       <AdminLoginPage
         onSuccess={() => {
-          navigateTo('admin');
+          setActiveView('admin');
+          window.location.hash = '#/admin';
         }}
         onBackToStore={() => {
           navigateTo('store');
@@ -129,12 +140,16 @@ export function App() {
 
   // Protected Admin Console (Strict Route Guard Verification)
   if (activeView === 'admin') {
-    if (!isAdmin) {
+    const session = adminAuth.getSession();
+    const isNowAdmin = Boolean(session && session.expiresAt > Date.now());
+
+    if (!isAdmin && !isNowAdmin) {
       // Unauthenticated fallback: Block rendering of admin console completely
       return (
         <AdminLoginPage
           onSuccess={() => {
-            navigateTo('admin');
+            setActiveView('admin');
+            window.location.hash = '#/admin';
           }}
           onBackToStore={() => {
             navigateTo('store');

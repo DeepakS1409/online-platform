@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { adminAuth, RateLimitStatus } from '../../services/adminAuth';
 import { isSupabaseConfigured } from '../../services/supabase';
+import { useAuth } from '../../context/AuthContext';
 
 interface AdminLoginPageProps {
   onSuccess: () => void;
@@ -26,6 +27,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
   onBackToStore,
   initialError,
 }) => {
+  const { adminLogin } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -62,15 +64,14 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
 
     setLoading(true);
     try {
-      const result = await adminAuth.login(username, password);
+      const result = await adminLogin(username, password);
 
       if (result.success) {
         onSuccess();
       } else {
         setErrorMessage(result.error || 'Invalid administrator credentials.');
-        if (result.rateLimit) {
-          setRateLimit(result.rateLimit);
-        }
+        const updatedRate = adminAuth.getRateLimitStatus();
+        setRateLimit(updatedRate);
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'An unexpected authentication error occurred.');
